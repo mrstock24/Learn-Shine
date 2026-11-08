@@ -1,0 +1,338 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learn Shine Reader</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f3f1eb;
+  color: #292820;
+}
+
+header {
+  padding: 16px 24px;
+  background: #293b35;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+header h1 { margin: 0; font-size: 22px; }
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px;
+  justify-content: center;
+  background: #e6e3db;
+}
+
+button, .file-label {
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 6px;
+  background: #405d50;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button:disabled { opacity: .4; cursor: not-allowed; }
+
+input[type=file] { display: none; }
+
+#status {
+  text-align: center;
+  padding: 12px;
+  color: #777;
+  font-size: 14px;
+}
+
+#reader {
+  width: min(100%, 1000px);
+  min-height: 65vh;
+  margin: 20px auto;
+  background: white;
+  box-shadow: 0 2px 14px #00000012;
+  padding: 20px;
+}
+
+#epub-view {
+  height: 75vh;
+  display: none;
+}
+
+#pdf-view {
+  display: none;
+  text-align: center;
+}
+
+#pdf-canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+body.dark {
+  background: #202321;
+  color: #eee;
+}
+
+body.dark .toolbar { background: #303632; }
+body.dark #reader { background: #292e2a; }
+body.dark #epub-view { background: #292e2a; }
+
+footer {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+  font-size: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Learn Shine</h1>
+  <span>Reading Room</span>
+</header>
+
+<div class="toolbar">
+  <label class="file-label" for="book-file">Open a book</label>
+  <input type="file" id="book-file" accept=".pdf,.epub">
+
+  <button id="previous" disabled>Previous</button>
+  <button id="next" disabled>Next</button>
+
+  <button id="smaller">A−</button>
+  <button id="larger">A+</button>
+  <button id="theme">Dark mode</button>
+</div>
+
+<div id="status">Choose a PDF or EPUB book to begin reading.</div>
+
+<main id="reader">
+  <div id="pdf-view">
+    <canvas id="pdf-canvas"></canvas>
+  </div>
+  <div id="epub-view"></div>
+  <div id="welcome" style="text-align:center;padding:90px 15px;">
+    <h2>Welcome to Learn Shine</h2>
+    <p>A quiet place to read, explore and learn.</p>
+    <p>Open a PDF or EPUB book to get started.</p>
+  </div>
+</main>
+
+<footer>Learn Shine · Read. Explore. Understand.</footer>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+const fileInput = document.getElementById("book-file");
+const status = document.getElementById("status");
+const pdfView = document.getElementById("pdf-view");
+const epubView = document.getElementById("epub-view");
+const welcome = document.getElementById("welcome");
+const canvas = document.getElementById("pdf-canvas");
+const ctx = canvas.getContext("2d");
+
+let pdfDoc = null;
+let pdfPage = 1;
+let epubBook = null;
+let epubRendition = null;
+let currentType = null;
+let fontSize = 100;
+
+function showReader() {
+  welcome.style.display = "none";
+  pdfView.style.display = currentType === "pdf" ? "block" : "none";
+  epubView.style.display = currentType === "epub" ? "block" : "none";
+}
+
+function updateButtons() {
+  document.getElementById("previous").disabled =
+    currentType === null ||
+    (currentType === "pdf" && pdfPage <= 1);
+
+  document.getElementById("next").disabled =
+    currentType === null ||
+    (currentType === "pdf" && pdfPage >= pdfDoc.numPages);
+}
+
+async function renderPDF() {
+  const page = await pdfDoc.getPage(pdfPage);
+  const viewport = page.getViewport({ scale: 1.5 });
+
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+
+  await page.render({
+    canvasContext: ctx,
+    viewport: viewport
+  }).promise;
+
+  status.textContent =
+    "PDF · Page " + pdfPage + " of " + pdfDoc.numPages;
+
+  updateButtons();
+}
+
+async function openPDF(data) {
+  currentType = "pdf";
+  epubBook = null;
+  pdfDoc = await pdfjsLib.getDocument({ data }).promise;
+  pdfPage = 1;
+  showReader();
+  await renderPDF();
+}
+
+async function openEPUB(data) {
+  currentType = "epub";
+  pdfDoc = null;
+
+  if (epubRendition) {
+    epubRendition.destroy();
+  }
+
+  epubView.innerHTML = "";
+  epubBook = ePub(data);
+
+  epubRendition = epubBook.renderTo("epub-view", {
+    width: "100%",
+    height: "100%",
+    spread: "none"
+  });
+
+  epubRendition.themes.fontSize(fontSize + "%");
+  epubRendition.themes.register("dark", {
+    "body": {
+      "background": "#292e2a !important",
+      "color": "#eeeeee !important"
+    }
+  });
+
+  epubRendition.themes.register("light", {
+    "body": {
+      "background": "#ffffff !important",
+      "color": "#292820 !important"
+    }
+  });
+
+  await epubRendition.display();
+
+  epubRendition.on("relocated", location => {
+    status.textContent = "EPUB · " +
+      (location.start.displayed.page || 1) +
+      " / " +
+      (location.start.displayed.total || "?");
+  });
+
+  showReader();
+  updateButtons();
+}
+
+fileInput.addEventListener("change", async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  status.textContent = "Opening " + file.name + "...";
+
+  try {
+    const data = await file.arrayBuffer();
+
+    if (file.name.toLowerCase().endsWith(".pdf")) {
+      await openPDF(data);
+    } else if (file.name.toLowerCase().endsWith(".epub")) {
+      await openEPUB(data);
+    } else {
+      throw new Error("Please choose a PDF or EPUB file.");
+    }
+  } catch (error) {
+    status.textContent = "Unable to open book: " + error.message;
+  }
+});
+
+document.getElementById("previous").onclick = async () => {
+  if (currentType === "pdf" && pdfPage > 1) {
+    pdfPage--;
+    await renderPDF();
+  } else if (currentType === "epub") {
+    await epubRendition.prev();
+  }
+};
+
+document.getElementById("next").onclick = async () => {
+  if (currentType === "pdf" && pdfPage < pdfDoc.numPages) {
+    pdfPage++;
+    await renderPDF();
+  } else if (currentType === "epub") {
+    await epubRendition.next();
+  }
+};
+
+document.getElementById("larger").onclick = () => {
+  fontSize += 10;
+  if (epubRendition) epubRendition.themes.fontSize(fontSize + "%");
+};
+
+document.getElementById("smaller").onclick = () => {
+  fontSize = Math.max(70, fontSize - 10);
+  if (epubRendition) epubRendition.themes.fontSize(fontSize + "%");
+};
+
+document.getElementById("theme").onclick = () => {
+  const dark = document.body.classList.toggle("dark");
+
+  document.getElementById("theme").textContent =
+    dark ? "Light mode" : "Dark mode";
+
+  if (epubRendition) {
+    epubRendition.themes.select(dark ? "dark" : "light");
+  }
+};
+
+// Also allow a book URL through ?book=...
+(async () => {
+  const params = new URLSearchParams(location.search);
+  const bookURL = params.get("book");
+
+  if (!bookURL) return;
+
+  try {
+    status.textContent = "Loading your book...";
+    const response = await fetch(bookURL);
+
+    if (!response.ok) throw new Error("Could not fetch the book.");
+
+    const data = await response.arrayBuffer();
+
+    if (bookURL.toLowerCase().split("?")[0].endsWith(".pdf")) {
+      await openPDF(data);
+    } else if (bookURL.toLowerCase().split("?")[0].endsWith(".epub")) {
+      await openEPUB(data);
+    } else {
+      throw new Error("The book URL must end in .pdf or .epub.");
+    }
+  } catch (error) {
+    status.textContent = "Unable to load book: " + error.message;
+  }
+})();
+</script>
+
+</body>
+</html>
