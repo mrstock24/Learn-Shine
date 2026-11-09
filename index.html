@@ -3,45 +3,121 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>My Reading Room</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learn Shine - My Library</title>
+
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       padding: 40px 20px;
-      background: #f5f3ed;
-      color: #292820;
-      font-family: Georgia, serif;
+      font-family: Arial, sans-serif;
+      background: #f5f7f4;
+      color: #26352c;
     }
-    main {
-      max-width: 850px;
+
+    .container {
+      max-width: 900px;
       margin: auto;
     }
-    h1 { font-size: 42px; }
-    .subtitle { color: #777; }
-    .book {
-      background: white;
-      padding: 22px;
-      margin: 18px 0;
-      border-radius: 10px;
+
+    header {
+      margin-bottom: 40px;
     }
-    a { color: #526c59; }
+
+    h1 {
+      margin-bottom: 8px;
+      color: #247447;
+      font-size: 36px;
+    }
+
+    .subtitle {
+      color: #68766c;
+    }
+
+    .book-card {
+      max-width: 300px;
+      padding: 24px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 3px 14px rgba(0,0,0,0.06);
+    }
+
+    .book-cover {
+      height: 190px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #e4eee5;
+      border-radius: 8px;
+      color: #247447;
+      font-size: 48px;
+    }
+
+    .book-card h2 {
+      margin-bottom: 6px;
+      font-size: 20px;
+    }
+
+    .format {
+      color: #778078;
+      font-size: 13px;
+    }
+
+    .open-button {
+      display: block;
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 7px;
+      background: #247447;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .open-button:hover {
+      background: #195b35;
+    }
   </style>
 </head>
+
 <body>
-  <main>
-    <h1>My Reading Room</h1>
-    <p class="subtitle">A quiet place to read and learn.</p>
+  <main class="container">
+    <header>
+      <h1>Learn Shine</h1>
+      <p class="subtitle">Your personal reading space.</p>
+    </header>
 
-    <h2>My Library</h2>
+    <section>
+      <h2>My Library</h2>
 
-    <div class="book">
-      <h3>My First Book</h3>
-      <p>Your reading journey starts here.</p>
-      <p>More books coming soon.</p>
-    </div>
+      <div class="book-card">
+        <div class="book-cover">📖</div>
 
-    <p>Welcome to your personal reading space.</p>
+        <h2>Fat Computer Science</h2>
+        <p class="format">PDF · My Collection</p>
+
+        <a class="open-button"
+           id="openBook"
+           href="#">
+          Open Book
+        </a>
+      </div>
+    </section>
   </main>
+
+  <script>
+    const bookUrl =
+      "https://github.com/mrstock24/Learn-Shine/releases/download/v1.0.0/Fat.Computer.Science.pdf";
+
+    const readerUrl =
+      "reader.html?book=" + encodeURIComponent(bookUrl);
+
+    document.getElementById("openBook").href = readerUrl;
+  </script>
 </body>
 </html>
