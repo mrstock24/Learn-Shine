@@ -38,8 +38,13 @@
       color: #68766c;
     }
 
+    .library {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+    }
+
     .book-card {
-      max-width: 300px;
       padding: 24px;
       background: white;
       border-radius: 12px;
@@ -54,7 +59,8 @@
       background: #e4eee5;
       border-radius: 8px;
       color: #247447;
-      font-size: 48px;
+      font-size: 42px;
+      font-weight: bold;
     }
 
     .book-card h2 {
@@ -87,6 +93,7 @@
 
 <body>
   <main class="container">
+
     <header>
       <h1>Learn Shine</h1>
       <p class="subtitle">Your personal reading space.</p>
@@ -95,29 +102,36 @@
     <section>
       <h2>My Library</h2>
 
-      <div class="book-card">
-        <div class="book-cover">📖</div>
+      <div class="library">
 
-        <h2>Fat Computer Science</h2>
-        <p class="format">PDF · My Collection</p>
+        <!-- PDF BOOK -->
+        <div class="book-card">
+          <div class="book-cover">PDF</div>
 
-        <a class="open-button"
-           id="openBook"
-           href="#">
-          Open Book
-        </a>
+          <h2>Fat Computer Science</h2>
+          <p class="format">PDF · My Collection</p>
+
+          <a class="open-button"
+             href="reader.html?book=Fat.Computer.Science.pdf">
+            Open Book
+          </a>
+        </div>
+
+        <!-- EPUB BOOK -->
+        <div class="book-card">
+          <div class="book-cover">EPUB</div>
+
+          <h2>CISSP: 3 in 1</h2>
+          <p class="format">EPUB · My Collection</p>
+
+          <a class="open-button"
+             href="reader.html?book=CISSP%2C%203%20in%201-%20Beginner%27s%20Guide%20to%20Learn%20the%20Realms%20of%20Security%20and%20Risk%20Management%20from%20A-Z%20using.epub">
+            Open Book
+          </a>
+        </div>
+
       </div>
     </section>
   </main>
-
-  <script>
-    const bookUrl =
-      "https://mrstock24.github.io/Learn-Shine/CISSP%2C%203%20in%201-%20Beginner%27s%20Guide%20to%20Learn%20the%20Realms%20of%20Security%20and%20Risk%20Management%20from%20A-Z%20using.epub?utm_source=chatgpt.com";
-
-    const readerUrl =
-      "reader.html?book=" + encodeURIComponent(bookUrl);
-
-    document.getElementById("openBook").href = readerUrl;
-  </script>
 </body>
 </html>
