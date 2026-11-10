@@ -1,0 +1,32 @@
+[
+  {
+    "title": "Deep Learning Illustrated",
+    "category": "Cybersecurity",
+    "path": "books/Cybersecurity/Deep Learning Illustrated.pdf"
+  },
+  {
+    "title": "Excel_POWER_BI",
+    "category": "Computer Science",
+    "path": "books/Computer Science/Excel_POWER_BI.pdf"
+  },
+  {
+    "title": "ML system design",
+    "category": "Cybersecurity",
+    "path": "books/Cybersecurity/ML system design.pdf"
+  },
+  {
+    "title": "Music Theory For Guitarists - The Complete Step-By-Step Guide To Becoming A Perfect Guitarist",
+    "category": "Uncategorised",
+    "path": "books/Music Theory For Guitarists - The Complete Step-By-Step Guide To Becoming A Perfect Guitarist.epub"
+  },
+  {
+    "title": "PowerBI",
+    "category": "Computer Science",
+    "path": "books/Computer Science/PowerBI.epub"
+  },
+  {
+    "title": "SQL - Felix Alvaro",
+    "category": "Computer Science",
+    "path": "books/Computer Science/SQL - Felix Alvaro.epub"
+  }
+]
