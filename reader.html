@@ -11,7 +11,9 @@
 <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
 
 <style>
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 :root {
   --green: #293b35;
@@ -37,7 +39,10 @@ header {
   align-items: center;
 }
 
-header h1 { margin: 0; font-size: 21px; }
+header h1 {
+  margin: 0;
+  font-size: 21px;
+}
 
 .toolbar {
   display: flex;
@@ -57,10 +62,9 @@ button, .file-label, select {
   color: white;
   cursor: pointer;
   font-size: 14px;
-  transition: background .15s;
 }
 
-button:hover, .file-label:hover, select:hover {
+button:hover, .file-label:hover {
   background: var(--green);
 }
 
@@ -69,7 +73,13 @@ button:disabled {
   cursor: not-allowed;
 }
 
-input[type=file] { display: none; }
+select {
+  border: 1px solid #ffffff40;
+}
+
+input[type=file] {
+  display: none;
+}
 
 #status {
   text-align: center;
@@ -80,7 +90,7 @@ input[type=file] { display: none; }
 
 #reader-shell {
   min-height: calc(100vh - 145px);
-  padding: 8px 65px 18px 12px;
+  padding: 8px 75px 18px 18px;
 }
 
 #reader {
@@ -88,30 +98,28 @@ input[type=file] { display: none; }
   min-height: calc(100vh - 190px);
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   background: white;
   border-radius: 8px;
   padding: 12px;
   box-shadow: 0 2px 14px #00000012;
 }
 
+/* PDF reading area */
 #pdf-view {
   display: none;
   width: 100%;
-  text-align: center;
-}
-
-#pdf-view.spread {
-  display: flex;
+  min-height: calc(100vh - 220px);
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   gap: 14px;
 }
 
-#pdf-canvas, #pdf-canvas-2 {
-  max-width: 100%;
-  height: auto;
+#pdf-canvas,
+#pdf-canvas-2 {
   display: block;
+  height: auto;
+  max-width: 100%;
   background: white;
 }
 
@@ -119,11 +127,12 @@ input[type=file] { display: none; }
   max-width: calc(50% - 7px);
 }
 
+/* EPUB reading area */
 #epub-view {
   display: none;
   width: 100%;
   height: calc(100vh - 190px);
-  min-height: 550px;
+  min-height: 500px;
   overflow: hidden;
 }
 
@@ -172,15 +181,26 @@ body.dark {
   color: #eee;
 }
 
-body.dark .toolbar { background: #303632; }
-body.dark #reader { background: #292e2a; }
-body.dark #status { color: #bbb; }
-body.dark #welcome { color: #eee; }
+body.dark .toolbar {
+  background: #303632;
+}
+
+body.dark #reader {
+  background: #292e2a;
+}
+
+body.dark #status {
+  color: #bbb;
+}
+
+body.dark #welcome {
+  color: #eee;
+}
 
 #reader-shell:fullscreen {
   background: var(--paper);
   overflow: auto;
-  padding: 12px 65px 12px 12px;
+  padding: 12px 75px 12px 12px;
 }
 
 body.dark #reader-shell:fullscreen {
@@ -192,19 +212,34 @@ body.dark #reader-shell:fullscreen {
 }
 
 @media (max-width: 700px) {
-  #reader-shell { padding: 8px; }
+  #reader-shell {
+    padding: 8px;
+  }
+
+  #reader {
+    min-height: calc(100vh - 180px);
+    padding: 6px;
+  }
+
+  #pdf-view.spread {
+    gap: 4px;
+  }
+
+  #pdf-view.spread canvas {
+    max-width: calc(50% - 2px);
+  }
+
   #floating-controls {
     right: 6px;
     top: auto;
     bottom: 15px;
   }
+
   #floating-controls button {
     width: 38px;
     height: 38px;
   }
-  #pdf-view.spread { gap: 5px; }
 }
-
 </style>
 </head>
 
@@ -235,7 +270,6 @@ body.dark #reader-shell:fullscreen {
 <div id="status">Choose a PDF or EPUB book to begin reading.</div>
 
 <main id="reader-shell">
-
   <div id="reader">
 
     <div id="pdf-view">
@@ -261,7 +295,6 @@ body.dark #reader-shell:fullscreen {
     <button id="theme-bottom">Dark mode</button>
     <button id="fullscreen-bottom">Fullscreen</button>
   </div>
-
 </main>
 
 <div id="floating-controls">
@@ -274,7 +307,6 @@ body.dark #reader-shell:fullscreen {
 <footer>Learn Shine · Read. Explore. Understand.</footer>
 
 <script>
-
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
@@ -306,58 +338,54 @@ let currentType = null;
 let fontSize = 100;
 let darkMode = false;
 
-
-// Show the appropriate reading area.
-
+/* Show the correct reader */
 function showReader() {
   welcome.style.display = "none";
 
   pdfView.style.display =
-    currentType === "pdf"
-      ? (layoutMode === "spread" ? "flex" : "block")
-      : "none";
-
-  pdfView.classList.toggle(
-    "spread",
-    currentType === "pdf" && layoutMode === "spread"
-  );
+    currentType === "pdf" ? "flex" : "none";
 
   epubView.style.display =
     currentType === "epub" ? "block" : "none";
 }
 
+/* Work out how many PDF pages to move */
+function getPDFStep() {
+  return layoutMode === "spread" ? 2 : 1;
+}
 
-// Navigation buttons.
-
+/* Update navigation buttons */
 function updateButtons() {
-
-  const step =
-    currentType === "pdf" && layoutMode === "spread" ? 2 : 1;
-
   const previousDisabled =
     currentType === null ||
     (currentType === "pdf" && pdfPage <= 1);
 
   const nextDisabled =
     currentType === null ||
-    (currentType === "pdf" && pdfPage + step > pdfDoc.numPages);
+    (
+      currentType === "pdf" &&
+      pdfPage + getPDFStep() > pdfDoc.numPages
+    );
 
-  ["previous-top", "previous-bottom", "float-previous"]
-    .forEach(id => {
-      document.getElementById(id).disabled = previousDisabled;
-    });
+  [
+    "previous-top",
+    "previous-bottom",
+    "float-previous"
+  ].forEach(id => {
+    document.getElementById(id).disabled = previousDisabled;
+  });
 
-  ["next-top", "next-bottom", "float-next"]
-    .forEach(id => {
-      document.getElementById(id).disabled = nextDisabled;
-    });
+  [
+    "next-top",
+    "next-bottom",
+    "float-next"
+  ].forEach(id => {
+    document.getElementById(id).disabled = nextDisabled;
+  });
 }
 
-
-// Draw a PDF page.
-
+/* Render one PDF page onto a canvas */
 async function drawPDFPage(pageNumber, targetCanvas, targetContext, scale) {
-
   const page = await pdfDoc.getPage(pageNumber);
   const viewport = page.getViewport({ scale });
 
@@ -368,6 +396,7 @@ async function drawPDFPage(pageNumber, targetCanvas, targetContext, scale) {
 
   targetCanvas.style.width = viewport.width + "px";
   targetCanvas.style.height = viewport.height + "px";
+  targetCanvas.style.display = "block";
 
   await page.render({
     canvasContext: targetContext,
@@ -378,89 +407,86 @@ async function drawPDFPage(pageNumber, targetCanvas, targetContext, scale) {
   }).promise;
 }
 
-
-// PDF rendering supports both layouts.
-
+/* Render the current PDF page or two-page spread */
 async function renderPDF() {
+  if (!pdfDoc) return;
 
-  const spread = layoutMode === "spread";
+  const isSpread = layoutMode === "spread";
 
-  pdfView.classList.toggle("spread", spread);
-  pdfView.style.display = spread ? "flex" : "block";
+  pdfView.classList.toggle("spread", isSpread);
 
-  const pageCount = spread
-    ? Math.min(2, pdfDoc.numPages - pdfPage + 1)
-    : 1;
-
-  canvas2.style.display = pageCount === 2 ? "block" : "none";
+  canvas2.style.display = "none";
 
   const firstPage = await pdfDoc.getPage(pdfPage);
-  const base = firstPage.getViewport({ scale: 1 });
+  const firstBase = firstPage.getViewport({ scale: 1 });
 
   const availableWidth = reader.clientWidth - 40;
-  const availableHeight = window.innerHeight - 170;
+  const availableHeight = window.innerHeight - 145;
 
-  const widthPerPage = spread
-    ? (availableWidth - 14) / 2
-    : availableWidth;
+  const pageCount = isSpread && pdfPage < pdfDoc.numPages ? 2 : 1;
 
-  const scale = Math.min(
-    widthPerPage / base.width,
-    availableHeight / base.height,
-    2
-  );
-
-  const safeScale = Math.max(0.1, scale);
-
-  await drawPDFPage(pdfPage, canvas, ctx, safeScale);
+  let widthPerPage = availableWidth;
 
   if (pageCount === 2) {
-    await drawPDFPage(pdfPage + 1, canvas2, ctx2, safeScale);
+    widthPerPage = (availableWidth - 14) / 2;
   }
 
-  status.textContent = spread
-    ? "PDF · Pages " + pdfPage + "–" +
-      (pdfPage + pageCount - 1) + " of " + pdfDoc.numPages
-    : "PDF · Page " + pdfPage + " of " + pdfDoc.numPages;
+  let scale = Math.min(
+    widthPerPage / firstBase.width,
+    availableHeight / firstBase.height,
+    2.5
+  );
+
+  /* Make sure the second page also fits */
+  if (pageCount === 2) {
+    const secondPage = await pdfDoc.getPage(pdfPage + 1);
+    const secondBase = secondPage.getViewport({ scale: 1 });
+
+    scale = Math.min(
+      scale,
+      widthPerPage / secondBase.width,
+      availableHeight / secondBase.height
+    );
+  }
+
+  scale = Math.max(0.1, scale);
+
+  await drawPDFPage(pdfPage, canvas, ctx, scale);
+
+  if (pageCount === 2) {
+    canvas2.style.display = "block";
+    await drawPDFPage(pdfPage + 1, canvas2, ctx2, scale);
+  }
+
+  status.textContent =
+    "PDF · Page " + pdfPage +
+    (pageCount === 2 ? "–" + (pdfPage + 1) : "") +
+    " of " + pdfDoc.numPages;
 
   updateButtons();
 
-  reader.scrollIntoView({
-    block: "start",
+  window.scrollTo({
+    top: 0,
     behavior: "smooth"
   });
 }
 
-
-// Open a PDF.
-
+/* Open a PDF */
 async function openPDF(data) {
-
   currentType = "pdf";
   epubBook = null;
-
-  if (epubRendition) {
-    epubRendition.destroy();
-    epubRendition = null;
-  }
-
   pdfDoc = await pdfjsLib.getDocument({ data }).promise;
 
   pdfPage = 1;
 
   showReader();
-
   await renderPDF();
 }
 
-
-// Create or recreate the EPUB reader.
-
+/* Create or recreate the EPUB reader */
 async function createEPUBRendition(startCfi) {
-
   if (epubRendition) {
     epubRendition.destroy();
-    epubRendition = null;
   }
 
   epubView.innerHTML = "";
@@ -468,8 +494,8 @@ async function createEPUBRendition(startCfi) {
   epubRendition = epubBook.renderTo("epub-view", {
     width: "100%",
     height: "100%",
-    spread: layoutMode === "spread" ? "always" : "none",
-    flow: "paginated"
+    flow: "paginated",
+    spread: layoutMode === "spread" ? "always" : "none"
   });
 
   epubRendition.themes.fontSize(fontSize + "%");
@@ -491,32 +517,21 @@ async function createEPUBRendition(startCfi) {
   epubRendition.themes.select(darkMode ? "dark" : "light");
 
   epubRendition.on("relocated", location => {
-
     const page = location.start.displayed.page || 1;
     const total = location.start.displayed.total || "?";
 
     status.textContent = "EPUB · " + page + " / " + total;
-
     updateButtons();
   });
 
   await epubRendition.display(startCfi || undefined);
 }
 
-
-// Open an EPUB.
-
+/* Open an EPUB */
 async function openEPUB(data) {
-
   currentType = "epub";
   pdfDoc = null;
 
-  if (epubRendition) {
-    epubRendition.destroy();
-    epubRendition = null;
-  }
-
-  epubView.innerHTML = "";
   epubBook = ePub(data);
 
   showReader();
@@ -526,87 +541,61 @@ async function openEPUB(data) {
   updateButtons();
 }
 
-
-// Switch between single and two-page layouts.
-
+/* Change between single page and two-page spread */
 async function changeLayout() {
-
   layoutMode = layoutSelect.value;
 
   if (currentType === "pdf" && pdfDoc) {
-
     await renderPDF();
+  }
 
-  } else if (currentType === "epub" && epubBook) {
+  if (currentType === "epub" && epubRendition) {
+    const location = epubRendition.currentLocation();
+    const startCfi = location && location.start
+      ? location.start.cfi
+      : null;
 
-    let currentCfi = null;
-
-    if (epubRendition) {
-      const location = epubRendition.currentLocation();
-
-      if (location && location.start) {
-        currentCfi = location.start.cfi;
-      }
-    }
-
-    await createEPUBRendition(currentCfi);
-    updateButtons();
+    await createEPUBRendition(startCfi);
   }
 }
 
-layoutSelect.addEventListener("change", () => {
-  changeLayout().catch(error => {
-    status.textContent = "Unable to change layout: " + error.message;
-  });
-});
+layoutSelect.addEventListener("change", changeLayout);
 
-
-// Previous page or spread.
-
+/* Previous page */
 async function previousPage() {
-
   if (currentType === "pdf" && pdfPage > 1) {
-
-    const step = layoutMode === "spread" ? 2 : 1;
-
-    pdfPage = Math.max(1, pdfPage - step);
-
+    pdfPage = Math.max(1, pdfPage - getPDFStep());
     await renderPDF();
-
   } else if (currentType === "epub" && epubRendition) {
-
     await epubRendition.prev();
 
-    reader.scrollIntoView({ block: "start", behavior: "smooth" });
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
   }
 }
 
-
-// Next page or spread.
-
+/* Next page */
 async function nextPage() {
-
-  if (currentType === "pdf" && pdfPage < pdfDoc.numPages) {
-
-    const step = layoutMode === "spread" ? 2 : 1;
-
-    pdfPage = Math.min(pdfPage + step, pdfDoc.numPages);
-
+  if (
+    currentType === "pdf" &&
+    pdfPage + getPDFStep() <= pdfDoc.numPages
+  ) {
+    pdfPage += getPDFStep();
     await renderPDF();
-
   } else if (currentType === "epub" && epubRendition) {
-
     await epubRendition.next();
 
-    reader.scrollIntoView({ block: "start", behavior: "smooth" });
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
   }
 }
 
-
-// EPUB font size.
-
+/* Change EPUB font size */
 function changeFont(amount) {
-
   fontSize = Math.max(70, Math.min(200, fontSize + amount));
 
   if (epubRendition) {
@@ -614,11 +603,8 @@ function changeFont(amount) {
   }
 }
 
-
-// Dark and light themes.
-
+/* Toggle dark mode */
 function toggleTheme() {
-
   darkMode = !darkMode;
 
   document.body.classList.toggle("dark", darkMode);
@@ -634,29 +620,21 @@ function toggleTheme() {
   }
 }
 
-
-// Fullscreen.
-
+/* Fullscreen */
 async function toggleFullscreen() {
-
   try {
-
     if (!document.fullscreenElement) {
       await shell.requestFullscreen();
     } else {
       await document.exitFullscreen();
     }
-
   } catch (error) {
-
     status.textContent =
       "Fullscreen is not available in this browser.";
   }
 }
 
-
 function updateFullscreenLabels() {
-
   const label = document.fullscreenElement
     ? "Exit fullscreen"
     : "Fullscreen";
@@ -668,11 +646,8 @@ function updateFullscreenLabels() {
 
 document.addEventListener("fullscreenchange", updateFullscreenLabels);
 
-
-// Open a book from the computer.
-
+/* Open a book selected from the computer */
 fileInput.addEventListener("change", async event => {
-
   const file = event.target.files[0];
 
   if (!file) return;
@@ -680,74 +655,76 @@ fileInput.addEventListener("change", async event => {
   status.textContent = "Opening " + file.name + "...";
 
   try {
-
     const data = await file.arrayBuffer();
 
     if (file.name.toLowerCase().endsWith(".pdf")) {
-
       await openPDF(data);
-
     } else if (file.name.toLowerCase().endsWith(".epub")) {
-
       await openEPUB(data);
-
     } else {
-
       throw new Error("Please choose a PDF or EPUB file.");
     }
-
   } catch (error) {
-
     status.textContent =
       "Unable to open book: " + error.message;
   }
 });
 
+/* Connect navigation buttons */
+[
+  "previous-top",
+  "previous-bottom",
+  "float-previous"
+].forEach(id => {
+  document.getElementById(id).onclick = previousPage;
+});
 
-// Connect top and bottom controls.
+[
+  "next-top",
+  "next-bottom",
+  "float-next"
+].forEach(id => {
+  document.getElementById(id).onclick = nextPage;
+});
 
-["previous-top", "previous-bottom", "float-previous"]
-  .forEach(id => {
-    document.getElementById(id).onclick = previousPage;
-  });
+/* Connect font controls */
+["larger-top", "larger-bottom"].forEach(id => {
+  document.getElementById(id).onclick = () => changeFont(10);
+});
 
-["next-top", "next-bottom", "float-next"]
-  .forEach(id => {
-    document.getElementById(id).onclick = nextPage;
-  });
+["smaller-top", "smaller-bottom"].forEach(id => {
+  document.getElementById(id).onclick = () => changeFont(-10);
+});
 
-["larger-top", "larger-bottom"]
-  .forEach(id => {
-    document.getElementById(id).onclick = () => changeFont(10);
-  });
+/* Connect theme controls */
+["theme-top", "theme-bottom"].forEach(id => {
+  document.getElementById(id).onclick = toggleTheme;
+});
 
-["smaller-top", "smaller-bottom"]
-  .forEach(id => {
-    document.getElementById(id).onclick = () => changeFont(-10);
-  });
+/* Connect fullscreen controls */
+[
+  "fullscreen-top",
+  "fullscreen-bottom",
+  "float-fullscreen"
+].forEach(id => {
+  document.getElementById(id).onclick = toggleFullscreen;
+});
 
-["theme-top", "theme-bottom"]
-  .forEach(id => {
-    document.getElementById(id).onclick = toggleTheme;
-  });
-
-["fullscreen-top", "fullscreen-bottom", "float-fullscreen"]
-  .forEach(id => {
-    document.getElementById(id).onclick = toggleFullscreen;
-  });
-
+/* Floating scroll-to-top button */
 document.getElementById("float-top").onclick = () => {
-  reader.scrollIntoView({ block: "start", behavior: "smooth" });
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
 };
 
-
-// Keyboard shortcuts.
-
+/* Keyboard shortcuts */
 document.addEventListener("keydown", event => {
-
   if (
     event.target.matches("input, textarea, select") ||
-    event.altKey || event.ctrlKey || event.metaKey
+    event.altKey ||
+    event.ctrlKey ||
+    event.metaKey
   ) return;
 
   if (event.key === "ArrowLeft") {
@@ -773,18 +750,14 @@ document.addEventListener("keydown", event => {
   }
 });
 
-
-// Automatically load a book passed in the URL.
-
+/* Automatically load a book passed in the URL */
 (async () => {
-
   const params = new URLSearchParams(location.search);
   const bookURL = params.get("book");
 
   if (!bookURL) return;
 
   try {
-
     status.textContent = "Loading your book...";
 
     const response = await fetch(bookURL);
@@ -797,40 +770,27 @@ document.addEventListener("keydown", event => {
     const path = bookURL.toLowerCase().split("?")[0];
 
     if (path.endsWith(".pdf")) {
-
       await openPDF(data);
-
     } else if (path.endsWith(".epub")) {
-
       await openEPUB(data);
-
     } else {
-
       throw new Error("The book URL must end in .pdf or .epub.");
     }
-
   } catch (error) {
-
     status.textContent =
       "Unable to load book: " + error.message;
   }
-
 })();
 
-
-// Refit PDF when the browser window changes size.
-
+/* Refit the PDF when the browser window changes size */
 window.addEventListener("resize", () => {
-
   if (currentType === "pdf" && pdfDoc) {
-
     renderPDF().catch(error => {
       status.textContent =
         "Unable to resize PDF: " + error.message;
     });
   }
 });
-
 </script>
 
 </body>
