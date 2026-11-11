@@ -61,11 +61,14 @@
       color: #247447;
       font-size: 42px;
       font-weight: bold;
+      text-align: center;
+      padding: 12px;
     }
 
     .book-card h2 {
       margin-bottom: 6px;
       font-size: 20px;
+      overflow-wrap: anywhere;
     }
 
     .format {
@@ -88,6 +91,17 @@
     .open-button:hover {
       background: #195b35;
     }
+
+    .category-heading {
+      margin: 32px 0 16px;
+      color: #247447;
+      font-size: 22px;
+    }
+
+    .status {
+      color: #68766c;
+      margin-top: 20px;
+    }
   </style>
 </head>
 
@@ -104,7 +118,7 @@
 
       <div class="library">
 
-        <!-- PDF BOOK -->
+        <!-- EXISTING PDF BOOK -->
         <div class="book-card">
           <div class="book-cover">PDF</div>
 
@@ -117,7 +131,7 @@
           </a>
         </div>
 
-        <!-- EPUB BOOK -->
+        <!-- EXISTING EPUB BOOK -->
         <div class="book-card">
           <div class="book-cover">EPUB</div>
 
@@ -131,7 +145,76 @@
         </div>
 
       </div>
+
+      <!-- AUTOMATIC BOOKS WILL APPEAR HERE -->
+      <div id="automatic-books"></div>
+
+      <p id="library-status" class="status">
+        Loading your additional books...
+      </p>
+
     </section>
   </main>
+
+  <script>
+    async function loadBooks() {
+      const container = document.getElementById("automatic-books");
+      const status = document.getElementById("library-status");
+
+      try {
+        const response = await fetch("library.json");
+
+        if (!response.ok) {
+          throw new Error("Could not load the book catalogue.");
+        }
+
+        const books = await response.json();
+
+        if (!Array.isArray(books) || books.length === 0) {
+          status.textContent = "No additional books found yet.";
+          return;
+        }
+
+        status.textContent = "";
+
+        books.forEach(book => {
+          const extension = book.path.split(".").pop().toUpperCase();
+
+          const card = document.createElement("div");
+          card.className = "book-card";
+
+          const cover = document.createElement("div");
+          cover.className = "book-cover";
+          cover.textContent = extension;
+
+          const title = document.createElement("h2");
+          title.textContent = book.title;
+
+          const details = document.createElement("p");
+          details.className = "format";
+          details.textContent = extension + " · " + book.category;
+
+          const link = document.createElement("a");
+          link.className = "open-button";
+          link.textContent = "Open Book";
+          link.href = "reader.html?book=" + encodeURIComponent(book.path);
+
+          card.appendChild(cover);
+          card.appendChild(title);
+          card.appendChild(details);
+          card.appendChild(link);
+
+          container.appendChild(card);
+        });
+
+      } catch (error) {
+        status.textContent = "Unable to load additional books. Please try again later.";
+        console.error(error);
+      }
+    }
+
+    loadBooks();
+  </script>
+
 </body>
 </html>
