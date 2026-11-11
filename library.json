@@ -1,5 +1,10 @@
 [
   {
+    "title": "CISSP, 3 in 1- Beginner's Guide to Learn the Realms of Security and Risk Management from A-Z using",
+    "category": "Computer Science",
+    "path": "books/Computer Science/CISSP, 3 in 1- Beginner's Guide to Learn the Realms of Security and Risk Management from A-Z using.epub"
+  },
+  {
     "title": "Deep Learning Illustrated",
     "category": "Cybersecurity",
     "path": "books/Cybersecurity/Deep Learning Illustrated.pdf"
@@ -8,6 +13,11 @@
     "title": "Excel_POWER_BI",
     "category": "Computer Science",
     "path": "books/Computer Science/Excel_POWER_BI.pdf"
+  },
+  {
+    "title": "Fat Computer Science 2",
+    "category": "Computer Science",
+    "path": "books/Computer Science/Fat Computer Science 2.pdf"
   },
   {
     "title": "ML system design",
