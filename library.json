@@ -35,6 +35,11 @@
     "path": "books/Computer Science/PowerBI.epub"
   },
   {
+    "title": "Space 1",
+    "category": "Computer Science",
+    "path": "books/Computer Science/Space 1.epub"
+  },
+  {
     "title": "SQL - Felix Alvaro",
     "category": "Computer Science",
     "path": "books/Computer Science/SQL - Felix Alvaro.epub"
